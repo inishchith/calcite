@@ -76,6 +76,7 @@ import static org.apache.calcite.runtime.SpatialTypeUtils.fromGeoJson;
 import static org.apache.calcite.runtime.SpatialTypeUtils.fromGml;
 import static org.apache.calcite.runtime.SpatialTypeUtils.fromWkb;
 import static org.apache.calcite.runtime.SpatialTypeUtils.fromWkt;
+import static org.apache.calcite.util.Static.RESOURCE;
 
 /**
  * Helper methods to implement spatial type (ST) functions in generated code.
@@ -1180,9 +1181,12 @@ public class SpatialTypeFunctions {
    * {@code srid}.
    */
   public static Geometry ST_Transform(Geometry geom, int srid) {
-    ProjectionTransformer projectionTransformer =
-        new ProjectionTransformer(geom.getSRID(), srid);
-    return projectionTransformer.transform(geom);
+    try {
+      ProjectionTransformer projectionTransformer = new ProjectionTransformer(geom.getSRID(), srid);
+      return projectionTransformer.transform(geom);
+    } catch (IllegalStateException e) {
+      throw RESOURCE.proj4jEpsgIsMissing().ex();
+    }
   }
 
   /**
